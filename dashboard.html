@@ -3,221 +3,187 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <title>Profile Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Smooth Loading Animation */
+        .loading-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+    </style>
 </head>
-<body class="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 min-h-screen">
+<body class="bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 min-h-screen text-slate-200">
     
     <!-- Navigation Bar -->
-    <nav class="bg-white/10 backdrop-blur-lg border-b border-white/10">
-        <div class="container mx-auto px-6 py-4">
-            <div class="flex justify-between items-center">
-                <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
-                        <i class="fas fa-bolt text-white text-lg"></i>
-                    </div>
-                    <span class="text-white font-bold text-xl">Prinaince Library</span>
+    <nav class="bg-black/20 backdrop-blur-xl border-b border-white/10 sticky top-0 z-50">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-gradient-to-tr from-purple-500 to-blue-500 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/20">
+                    <i class="fas fa-layer-group text-white text-lg"></i>
                 </div>
-                <button 
-                    onclick="logout()"
-                    class="flex items-center space-x-2 bg-red-500/20 text-red-400 px-4 py-2 rounded-lg hover:bg-red-500/30 transition border border-red-500/30"
-                >
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>Logout</span>
-                </button>
+                <span class="text-white font-bold text-xl tracking-tight">Prinaince<span class="text-purple-400">Library</span></span>
             </div>
+            <button onclick="logout()" class="bg-red-500/10 hover:bg-red-500/20 text-red-400 px-4 py-2 rounded-xl transition border border-red-500/20 flex items-center gap-2 text-sm font-medium">
+                <i class="fas fa-power-off"></i>
+                <span>Exit</span>
+            </button>
         </div>
     </nav>
 
-    <div class="container mx-auto px-4 py-8">
-        
-        <!-- Welcome Section -->
-        <div class="text-center mb-10">
-            <h1 class="text-4xl font-bold text-white mb-2">Welcome Back! 👋</h1>
-            <p class="text-purple-300">Here's your account overview</p>
+    <div id="loadingOverlay" class="fixed inset-0 bg-slate-950 z-40 flex items-center justify-center">
+        <div class="text-center">
+            <div class="w-16 h-16 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin mx-auto mb-4"></div>
+            <p class="text-purple-300 animate-pulse">Fetching Profile...</p>
         </div>
+    </div>
 
-        <!-- Profile Card -->
-        <div class="max-w-2xl mx-auto">
-            <div class="bg-white/10 backdrop-blur-lg rounded-3xl border border-white/20 overflow-hidden shadow-2xl">
+    <div class="container mx-auto px-4 py-8">
+        <div class="max-w-2xl mx-auto space-y-6">
+            
+            <!-- Profile Card -->
+            <div class="bg-white/5 backdrop-blur-2xl rounded-[2.5rem] border border-white/10 overflow-hidden shadow-2xl">
                 
                 <!-- Profile Header -->
-                <div class="bg-gradient-to-r from-purple-600 to-pink-600 p-8 text-center relative">
-                    <div class="absolute inset-0 bg-black/20"></div>
-                    <div class="relative">
-                        <div id="userAvatar" class="w-24 h-24 bg-white rounded-full mx-auto mb-4 flex items-center justify-center text-4xl font-bold text-purple-600 shadow-xl border-4 border-white/50">
-                            
-                        </div>
-                        <h2 id="userName" class="text-2xl font-bold text-white mb-1 px-4"></h2>
-                        <p id="userEmail" class="text-purple-200 flex items-center justify-center gap-2 px-4">
-                            <i class="fas fa-envelope flex-shrink-0"></i>
-                            <span id="headerEmail" class="whitespace-nowrap"></span>
-                        </p>
+                <div class="bg-gradient-to-br from-purple-600/20 to-blue-600/20 p-10 text-center border-b border-white/5 relative">
+                    <div id="userAvatar" class="w-28 h-28 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full mx-auto mb-4 flex items-center justify-center text-4xl font-bold text-white shadow-2xl border-4 border-white/10">
+                        ?
+                    </div>
+                    <h2 id="userName" class="text-3xl font-extrabold text-white mb-1 tracking-tight">Loading...</h2>
+                    <p id="userEmail" class="text-slate-400 font-medium"></p>
+                    
+                    <!-- Subscription Badge -->
+                    <div id="planBadge" class="mt-4 inline-flex items-center px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                        Checking Plan...
                     </div>
                 </div>
 
                 <!-- Stats Grid -->
-                <div class="grid grid-cols-3 divide-x divide-white/10 bg-white/5">
+                <div class="grid grid-cols-3 divide-x divide-white/5 bg-white/5 border-b border-white/5">
                     <div class="p-6 text-center">
-                        <div class="text-3xl font-bold text-white mb-1" id="daysActive">0</div>
-                        <div class="text-purple-300 text-sm">Days Active</div>
+                        <div class="text-2xl font-bold text-white mb-1" id="daysActive">0</div>
+                        <div class="text-slate-400 text-[10px] uppercase font-bold tracking-widest">Days Active</div>
                     </div>
                     <div class="p-6 text-center">
-                        <div class="text-3xl font-bold text-green-400 mb-1">
-                            <i class="fas fa-check-circle"></i>
+                        <div class="text-2xl font-bold text-emerald-400 mb-1">
+                            <i class="fas fa-shield-check"></i>
                         </div>
-                        <div class="text-purple-300 text-sm">Verified</div>
+                        <div class="text-slate-400 text-[10px] uppercase font-bold tracking-widest">Verified</div>
                     </div>
                     <div class="p-6 text-center">
-                        <div class="text-3xl font-bold text-white mb-1" id="userStatus">Active</div>
-                        <div class="text-purple-300 text-sm">Status</div>
+                        <div class="text-2xl font-bold text-white mb-1" id="userStatusDisplay">...</div>
+                        <div class="text-slate-400 text-[10px] uppercase font-bold tracking-widest">Status</div>
                     </div>
                 </div>
 
-                <!-- User Details -->
+                <!-- Account Details -->
                 <div class="p-8 space-y-4">
-                    <h3 class="text-white font-semibold text-lg mb-4 flex items-center gap-2">
-                        <i class="fas fa-user-circle text-purple-400"></i>
-                        Account Details
-                    </h3>
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-white font-bold flex items-center gap-2">
+                            <i class="fas fa-id-card text-purple-500"></i>
+                            Account Information
+                        </h3>
+                    </div>
                     
-                    <div class="bg-white/5 rounded-xl p-4 border border-white/10">
-                        <div class="flex items-start gap-3">
-                            <div class="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                                <i class="fas fa-user text-purple-400"></i>
+                    <div class="space-y-3">
+                        <div class="flex items-center p-4 bg-white/5 rounded-2xl border border-white/5">
+                            <i class="fas fa-calendar-alt w-10 text-purple-400"></i>
+                            <div>
+                                <p class="text-[10px] text-slate-500 uppercase font-bold">Member Since</p>
+                                <p id="detailDate" class="text-slate-200 font-medium">Loading...</p>
                             </div>
-                            <div class="flex-1 min-w-0">
-                                <p class="text-purple-300 text-sm">Full Name</p>
-                                <p id="detailName" class="text-white font-medium break-words"></p>
-                            </div>
-                            <i class="fas fa-check-circle text-green-400 flex-shrink-0"></i>
                         </div>
-                    </div>
 
-                    <div class="bg-white/5 rounded-xl p-4 border border-white/10">
-                        <div class="flex items-start gap-3">
-                            <div class="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                                <i class="fas fa-envelope text-blue-400"></i>
+                        <div class="flex items-center p-4 bg-white/5 rounded-2xl border border-white/5">
+                            <i class="fas fa-gem w-10 text-blue-400"></i>
+                            <div>
+                                <p class="text-[10px] text-slate-500 uppercase font-bold">Current Plan</p>
+                                <p id="detailPlan" class="text-slate-200 font-medium">Fetching status...</p>
                             </div>
-                            <div class="flex-1 min-w-0 overflow-hidden">
-                                <p class="text-purple-300 text-sm">Email Address</p>
-                                <p id="detailEmail" class="text-white font-medium whitespace-nowrap overflow-hidden text-ellipsis"></p>
-                            </div>
-                            <i class="fas fa-check-circle text-green-400 flex-shrink-0"></i>
                         </div>
-                    </div>
 
-                    <div class="bg-white/5 rounded-xl p-4 border border-white/10">
-                        <div class="flex items-start gap-3">
-                            <div class="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                                <i class="fas fa-calendar text-green-400"></i>
+                        <div class="flex items-center p-4 bg-white/5 rounded-2xl border border-white/5">
+                            <i class="fas fa-fingerprint w-10 text-emerald-400"></i>
+                            <div class="truncate">
+                                <p class="text-[10px] text-slate-500 uppercase font-bold">User System ID</p>
+                                <p id="detailUID" class="text-slate-400 text-xs font-mono truncate"></p>
                             </div>
-                            <div class="flex-1 min-w-0">
-                                <p class="text-purple-300 text-sm">Member Since</p>
-                                <p id="detailDate" class="text-white font-medium text-sm"></p>
-                            </div>
-                            <i class="fas fa-clock text-purple-400 flex-shrink-0"></i>
-                        </div>
-                    </div>
-
-                    <div class="bg-white/5 rounded-xl p-4 border border-white/10">
-                        <div class="flex items-start gap-3">
-                            <div class="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                                <i class="fas fa-shield-alt text-yellow-400"></i>
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <p class="text-purple-300 text-sm">Account Status</p>
-                                <p id="detailStatus" class="text-green-400 font-medium"></p>
-                            </div>
-                            <span id="statusBadge" class="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-sm border border-green-500/30 flex-shrink-0 whitespace-nowrap">Active</span>
                         </div>
                     </div>
                 </div>
-
             </div>
 
             <!-- Footer -->
-            <p class="text-center text-purple-400/50 mt-8 text-sm">
-                © 2025 Prinaince Library. All rights reserved.
-            </p>
+            <div class="text-center space-y-2 opacity-40">
+                <p class="text-xs font-medium tracking-widest">PRINAINCE LIBRARY SECURED</p>
+                <p class="text-[10px]">© 2025 • Version 2.0.4</p>
+            </div>
         </div>
     </div>
 
     <script>
-        const user = JSON.parse(localStorage.getItem('currentUser'));
-        
-        if (!user) {
-            window.location.href = 'index.html';
-        } else {
-            // Set user avatar (first letter of name)
-            const firstLetter = user.name.charAt(0).toUpperCase();
-            document.getElementById('userAvatar').textContent = firstLetter;
-            
-            // Set user info
-            document.getElementById('userName').textContent = user.name;
-            
-            // Dynamic email size for header
-            const headerEmailSpan = document.getElementById('headerEmail');
-            headerEmailSpan.textContent = user.email;
-            if (user.email.length > 35) {
-                headerEmailSpan.style.fontSize = '0.75rem';
-            } else if (user.email.length > 28) {
-                headerEmailSpan.style.fontSize = '0.85rem';
+        // Supabase Init
+        const SUPABASE_URL = 'https://weunyluildqsgbsmmawi.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndldW55bHVpbGRxc2dic21tYXdpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk1MTQ1MTAsImV4cCI6MjA4NTA5MDUxMH0.MpC1WcT120r59MPz_Bt8CBnXjTusajlu4OPmd_6KHkw';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // 1. URL se ID pakadna
+        const urlParams = new URLSearchParams(window.location.search);
+        const userId = urlParams.get('uid');
+
+        async function loadProfile() {
+            if (!userId) {
+                document.body.innerHTML = "<div class='flex h-screen items-center justify-center text-white'>Error: No UID provided</div>";
+                return;
             }
-            
-            document.getElementById('detailName').textContent = user.name;
-            
-            // Dynamic email size for detail section
-            const detailEmailElement = document.getElementById('detailEmail');
-            detailEmailElement.textContent = user.email;
-            if (user.email.length > 40) {
-                detailEmailElement.style.fontSize = '0.65rem';
-            } else if (user.email.length > 32) {
-                detailEmailElement.style.fontSize = '0.75rem';
-            } else if (user.email.length > 25) {
-                detailEmailElement.style.fontSize = '0.8rem';
-            } else {
-                detailEmailElement.style.fontSize = '0.875rem';
-            }
-            
-            // Calculate days active
-            if (user.created_at) {
+
+            try {
+                // 2. Supabase se User Fetch karna
+                const { data: user, error } = await supabaseClient
+                    .from('users')
+                    .select('*')
+                    .eq('id', userId)
+                    .single();
+
+                if (error || !user) throw error;
+
+                // 3. UI Update karna
+                document.getElementById('userName').textContent = user.name;
+                document.getElementById('userEmail').textContent = user.email;
+                document.getElementById('userAvatar').textContent = user.name.charAt(0).toUpperCase();
+                document.getElementById('detailUID').textContent = user.id;
+                
+                // Status Logic
+                const status = user.is_blocked ? 'Blocked' : 'Active';
+                document.getElementById('userStatusDisplay').textContent = status;
+                document.getElementById('detailStatus').textContent = user.is_blocked ? 'Account Restricted' : 'Verified & Active';
+                
+                // Plan Logic
+                const plan = user.plan_status || 'trial';
+                document.getElementById('planBadge').textContent = plan + " Member";
+                document.getElementById('detailPlan').textContent = plan.toUpperCase();
+                
+                // Days Active Calculation
                 const createdDate = new Date(user.created_at);
-                const today = new Date();
-                const diffTime = Math.abs(today - createdDate);
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                document.getElementById('daysActive').textContent = diffDays;
-                document.getElementById('detailDate').textContent = createdDate.toLocaleDateString('en-US', { 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric' 
-                });
-            } else {
-                document.getElementById('daysActive').textContent = '1';
-                document.getElementById('detailDate').textContent = 'Today';
-            }
-            
-            // Set status
-            const isBlocked = user.is_blocked;
-            if (isBlocked) {
-                document.getElementById('userStatus').textContent = 'Blocked';
-                document.getElementById('userStatus').classList.add('text-red-400');
-                document.getElementById('detailStatus').textContent = 'Blocked';
-                document.getElementById('detailStatus').classList.remove('text-green-400');
-                document.getElementById('detailStatus').classList.add('text-red-400');
-                document.getElementById('statusBadge').textContent = 'Blocked';
-                document.getElementById('statusBadge').classList.remove('bg-green-500/20', 'text-green-400', 'border-green-500/30');
-                document.getElementById('statusBadge').classList.add('bg-red-500/20', 'text-red-400', 'border-red-500/30');
-            } else {
-                document.getElementById('detailStatus').textContent = 'Account is active and verified';
+                const diff = Math.ceil((new Date() - createdDate) / (1000 * 60 * 60 * 24));
+                document.getElementById('daysActive').textContent = diff;
+                document.getElementById('detailDate').textContent = createdDate.toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric' });
+
+                // Hide Loading
+                document.getElementById('loadingOverlay').style.display = 'none';
+
+            } catch (err) {
+                console.error(err);
+                alert("Failed to load profile. Please login again.");
             }
         }
-        
+
         function logout() {
-            localStorage.removeItem('currentUser');
-            window.location.href = 'index.html';
+            // App ko batane ke liye ki logout hona hai
+            window.location.href = "logout://now";
         }
+
+        window.onload = loadProfile;
     </script>
 </body>
 </html>
