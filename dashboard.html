@@ -15,16 +15,32 @@
 </head>
 <body class="bg-slate-950 text-white min-h-screen">
 
-  <!-- Top -->
   <div class="max-w-3xl mx-auto p-4">
     <div class="bg-white/5 border border-white/10 rounded-3xl overflow-hidden shadow-2xl">
 
-      <!-- Header -->
+      <!-- Top Bar -->
+      <div class="flex items-center justify-between px-5 py-4 bg-black/20 border-b border-white/10">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center">
+            <i class="fas fa-user text-white"></i>
+          </div>
+          <div>
+            <h1 class="font-bold text-lg">My Profile</h1>
+            <p class="text-xs text-slate-400">Prinaince Library</p>
+          </div>
+        </div>
+
+        <button onclick="logout()" class="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 transition text-sm font-semibold">
+          Logout
+        </button>
+      </div>
+
+      <!-- Profile Header -->
       <div class="bg-gradient-to-r from-purple-600 to-blue-600 p-8 text-center">
         <div id="userAvatar" class="w-24 h-24 mx-auto rounded-full bg-white text-purple-700 flex items-center justify-center text-4xl font-bold border-4 border-white/30 shadow-lg">
           ?
         </div>
-        <h1 id="userName" class="text-2xl font-bold mt-4">Loading...</h1>
+        <h2 id="userName" class="text-2xl font-bold mt-4">Loading...</h2>
         <p id="userEmail" class="text-purple-100 text-sm mt-1 break-all">Please wait...</p>
 
         <div id="planBadge" class="inline-block mt-4 px-4 py-1 rounded-full bg-white/20 text-sm font-semibold">
@@ -81,7 +97,7 @@
         </div>
       </div>
 
-      <!-- Buttons -->
+      <!-- Bottom Buttons -->
       <div class="p-6 pt-0">
         <div class="grid grid-cols-2 gap-3">
           <button onclick="reloadProfile()" class="bg-blue-600 hover:bg-blue-500 rounded-xl py-3 font-semibold transition">
@@ -127,21 +143,17 @@
 
       const user = data;
 
-      // Basic
       document.getElementById("userName").textContent = user.name || "Unknown User";
       document.getElementById("userEmail").textContent = user.email || "No Email";
       document.getElementById("detailName").textContent = user.name || "Unknown User";
       document.getElementById("detailEmail").textContent = user.email || "No Email";
       document.getElementById("detailUID").textContent = user.id || "-";
 
-      // Avatar
       const firstLetter = (user.name || user.email || "U").charAt(0).toUpperCase();
       document.getElementById("userAvatar").textContent = firstLetter;
 
-      // Days active
-      let createdDate = null;
       if (user.created_at) {
-        createdDate = new Date(user.created_at);
+        const createdDate = new Date(user.created_at);
         const today = new Date();
         const diffTime = Math.abs(today - createdDate);
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -156,7 +168,6 @@
         document.getElementById("detailDate").textContent = "Today";
       }
 
-      // Status
       const blocked = user.is_blocked === true;
       const statusText = blocked ? "Blocked" : "Active";
       document.getElementById("userStatusDisplay").textContent = statusText;
@@ -164,14 +175,12 @@
         ? "text-2xl font-bold text-red-400"
         : "text-2xl font-bold text-green-400";
 
-      // Plan
       const plan = user.plan_status ? user.plan_status.toUpperCase() : "TRIAL";
       document.getElementById("planText").textContent = plan;
       document.getElementById("detailPlan").textContent = plan;
-      document.getElementById("planBadge").textContent = plan + " MEMBER";
 
-      // Badge color
       const badge = document.getElementById("planBadge");
+      badge.textContent = plan + " MEMBER";
       badge.className = "inline-block mt-4 px-4 py-1 rounded-full text-sm font-semibold ";
       if (plan === "ACTIVE") {
         badge.className += "bg-green-500/20 text-green-300";
@@ -181,7 +190,6 @@
         badge.className += "bg-red-500/20 text-red-300";
       }
 
-      // Expiry
       let expiryText = "Not Available";
       if (user.subscription_end_at) {
         expiryText = new Date(user.subscription_end_at).toLocaleString("en-IN");
@@ -196,7 +204,8 @@
     }
 
     function logout() {
-      window.location.href = "logout://now";
+      // App ko custom URL bhej raha hai
+      window.location.href = "app://logout";
     }
 
     window.onload = loadProfile;
